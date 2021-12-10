@@ -94,6 +94,12 @@ export default function App() {
           <div className="header">
             Mint Your NFT
           </div>
+          <div className="info">
+              <a target="_blank" href={`https://rinkeby.etherscan.io/address/${contractAddress}`}>Contract : {contractAddress}</a>
+          </div>
+          <div className="info">
+              <a target="_blank" href="https://github.com/mbaroukh/MyNftMinter/">Sources</a>
+          </div>
 
           <div className="info">
             Status : {status}
@@ -112,6 +118,7 @@ export default function App() {
               </button>
             </>
           )}
+
           {status==="error" && <button className="waveButton" onClick={retry}>
               RETRY
           </button>}
