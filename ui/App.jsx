@@ -9,15 +9,21 @@ export default function App() {
 
   
   const [status, setStatus] = React.useState("loading");
+  const [errorMsg, setErrorMsg] = React.useState();
   const [currentAccount, setCurrentAccount] = React.useState()
   const [lastMintedURL, setLastMintedURL] = React.useState()
+  const [lastTransactionURL, setLastTransactionURL] = React.useState()
+
+  const setError = msg => {
+    setErrorMsg(msg);
+    setStatus("error")
+  }
   
   React.useEffect(()=>{
     const { ethereum } = window;
-    console.log("Status=", status)
 
     if (!ethereum) {
-      setStatus("error")
+      setError("No wallet detected")
     } else {
       if (status==="loading") {
         setStatus("checking")
@@ -40,8 +46,7 @@ export default function App() {
             setStatus("no_account")
           }
         }).catch(err=>{
-          console.error(err)
-          setStatus("error")
+          setError(err.message)
         })
       } else {
         const provider = new ethers.providers.Web3Provider(ethereum);
@@ -49,13 +54,14 @@ export default function App() {
         const nftContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         if (status==="mint") {
+          setLastTransactionURL(undefined)
+          setLastMintedURL(undefined)
           nftContract.makeAnEpicNFT()
           .then(tx => {
-            console.log(`Mined, see transaction: https://rinkeby.etherscan.io/tx/${tx.hash}`, tx);
-            return tx.wait()
-          }).then(()=>setStatus("ready")).catch(err=>{
-            console.error(err)
-            setStatus("error")
+            setLastTransactionURL(`https://rinkeby.etherscan.io/tx/${tx.hash}`)
+            setStatus("ready")
+          }).catch(err=>{
+            setStatus(err.message)
           })
         }  
       }
@@ -120,7 +126,9 @@ export default function App() {
           )}
 
           {status==="error" && <button className="waveButton" onClick={retry}>
-              RETRY
+              RETRY {errorMsg && (<>
+              : {errorMsg}
+              </>)}
           </button>}
         </div>
       </div>
@@ -129,9 +137,10 @@ export default function App() {
           <div className="lds-facebook"><div></div><div></div><div></div></div>
         </div>
       }
-      {lastMintedURL && (<>
+      {lastTransactionURL && (<>
         <hr/>
-        Last Minted : <a href={lastMintedURL} target="_blank">{lastMintedURL}</a>
+        Last Transaction : <a href={lastTransactionURL} target="_blank">{lastTransactionURL}</a><br/>
+        Last Minted : {lastMintedURL ? <a href={lastMintedURL} target="_blank">{lastMintedURL}</a>:"waiting event ..."}<br/>
       </>)}
     </>
   );
